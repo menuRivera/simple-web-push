@@ -10,24 +10,25 @@ if (navigator.serviceWorker) {
 
 function registerPush(appPubkey) {
     navigator.serviceWorker.register('service-worker.js');
-    navigator.serviceWorker.ready.then(function (registration) {
-        return registration.pushManager.getSubscription()
-            .then(function (subscription) {
-                if (subscription) return subscription
+    navigator.serviceWorker.ready
+        .then(function (registration) {
+            return registration.pushManager.getSubscription()
+                .then(function (subscription) {
+                    if (subscription) return subscription
 
-                return registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(appPubkey)
+                    return registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(appPubkey)
+                    });
+                })
+                .then(function (subscription) {
+                    return fetch('http://localhost:5000/api/subscription', {
+                        method: 'post',
+                        headers: { 'Content-type': 'application/json' },
+                        body: JSON.stringify({ subscription: subscription })
+                    }).then(res => console.log(res));
                 });
-            })
-            .then(function (subscription) {
-                return fetch('http://localhost:5000/api/subscription', {
-                    method: 'post',
-                    headers: { 'Content-type': 'application/json' },
-                    body: { subscription: subscription }
-                }).then(res => console.log(res));
-            });
-    });
+        });
 }
 
 function urlBase64ToUint8Array(base64String) {
